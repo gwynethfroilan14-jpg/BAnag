@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Glass Calculator</title>
+    <style>
+        :root {
+            --bg: #0d0d15;
+            --glass: rgba(255, 255, 255, 0.05);
+            --neon-cyan: #00f2ff;
+            --neon-pink: #ff007b;
+            --text: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: 
+                radia   l-gradient(circle at 20% 30%, #1a1a2e 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, #16213e 0%, transparent 40%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .calculator {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 25px;
+            width: 340px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 
+                        inset 0 0 15px rgba(255, 255, 255, 0.05);
+        }
+
+        .screen {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            text-align: right;
+            min-height: 80px;
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .prev-display { color: rgba(255, 255, 255, 0.5); font-size: 0.9rem; margin-bottom: 5px; min-height: 1.1rem; }
+        .curr-display { color: var(--neon-cyan); font-size: 2.2rem; font-weight: 300; overflow: hidden; text-shadow: 0 0 10px rgba(0, 242, 255, 0.5); }
+
+        .btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+        button {
+            border: none;
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text);
+            padding: 18px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active { transform: translateY(1px); }
+
+        .op { color: var(--neon-pink); font-weight: bold; }
+        .special { color: var(--neon-cyan); }
+        .equal { 
+            grid-column: span 2; 
+            background: linear-gradient(135deg, var(--neon-cyan), #00a2ff);
+            color: #000;
+            font-weight: bold;
+            text-shadow: none;
+        }
+        .equal:hover { box-shadow: 0 0 20px rgba(0, 242, 255, 0.4); }
+    </style>
+</head>
+<body>
+
+<div class="calculator">
+    <div class="screen">
+        <div id="prev" class="prev-display"></div>
+        <div id="curr" class="curr-display">0</div>
+    </div>
+    <div class="btn-grid">
+        <button onclick="clearAll()" class="special">AC</button>
+        <button onclick="del()" class="special">DEL</button>
+        <button onclick="setOp('÷')" class="op">÷</button>
+        <button onclick="setOp('×')" class="op">×</button>
+        
+        <button onclick="addNum('7')">7</button>
+        <button onclick="addNum('8')">8</button>
+        <button onclick="addNum('9')">9</button>
+        <button onclick="setOp('-')" class="op">-</button>
+        
+        <button onclick="addNum('4')">4</button>
+        <button onclick="addNum('5')">5</button>
+        <button onclick="addNum('6')">6</button>
+        <button onclick="setOp('+')" class="op">+</button>
+        
+        <button onclick="addNum('1')">1</button>
+        <button onclick="addNum('2')">2</button>
+        <button onclick="addNum('3')">3</button>
+        <button onclick="calculate()" class="equal">=</button>
+        
+        <button onclick="addNum('0')" style="grid-column: span 2;">0</button>
+        <button onclick="addNum('.')">.</button>
+    </div>
+</div>
+
+<script>
+    let currVal = '0';
+    let prevVal = '';
+    let operation = null;
+
+    const currElem = document.getElementById('curr');
+    const prevElem = document.getElementById('prev');
+
+    function updateDisplay() {
+        currElem.innerText = currVal;
+        prevElem.innerText = operation ? `${prevVal} ${operation}` : '';
+    }
+
+    function addNum(num) {
+        if (num === '.' && currVal.includes('.')) return;
+        if (currVal === '0' && num !== '.') {
+            currVal = num;
+        } else {
+            currVal += num;
+        }
+        updateDisplay();
+    }
+
+    function clearAll() {
+        currVal = '0';
+        prevVal = '';
+        operation = null;
+        updateDisplay();
+    }
+
+    function del() {
+        currVal = currVal.toString().slice(0, -1);
+        if (currVal === '') currVal = '0';
+        updateDisplay();
+    }
+
+    function setOp(op) {
+        if (currVal === '') return;
+        if (prevVal !== '') calculate();
+        operation = op;
+        prevVal = currVal;
+        currVal = '';
+        updateDisplay();
+    }
+
+    function calculate() {
+        let result;
+        const prev = parseFloat(prevVal);
+        const current = parseFloat(currVal);
+        if (isNaN(prev) || isNaN(current)) return;
+
+        switch (operation) {
+            case '+': result = prev + current; break;
+            case '-': result = prev - current; break;
+            case '×': result = prev * current; break;
+            case '÷': result = prev / current; break;
+            default: return;
+        }
+        currVal = result.toString();
+        operation = null;
+        prevVal = '';
+        updateDisplay();
+    }
+</script>
+
+</body>
+</html>
